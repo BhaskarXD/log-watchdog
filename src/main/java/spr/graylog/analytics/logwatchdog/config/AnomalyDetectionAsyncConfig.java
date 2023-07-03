@@ -8,7 +8,6 @@ import spr.graylog.analytics.logwatchdog.util.CustomRejectionPolicy;
 
 import java.util.concurrent.Executor;
 
-
 @Configuration
 @EnableAsync
 public class AnomalyDetectionAsyncConfig {
@@ -27,5 +26,4 @@ public class AnomalyDetectionAsyncConfig {
         executor.initialize();
         return executor;
     }
-
 }

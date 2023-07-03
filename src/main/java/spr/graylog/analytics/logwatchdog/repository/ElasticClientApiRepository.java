@@ -12,12 +12,12 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 @Repository
-public class ElasticClusterRepository {
+public class ElasticClientApiRepository {
     @Value("${elasticsearch.index}")
     private String esIndex;
     private final ElasticsearchClient elasticsearchClient;
 
-    public ElasticClusterRepository(ElasticsearchClient elasticsearchClient) {
+    public ElasticClientApiRepository(ElasticsearchClient elasticsearchClient) {
         this.elasticsearchClient = elasticsearchClient;
     }
 

@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RestController
 @RequestMapping("/watchdog")
@@ -56,8 +56,8 @@ public class ElasticApiController {
         return manageAsyncTasksService.createAsyncLogMonitorByQuery(query);
     }
     @GetMapping("/anomalies/futures")
-    public Map<Map<String,String>, CompletableFuture<Void>> gettasks(){
-        return manageAsyncTasksService.getMapLogMonitoringThreadFutures();
+    public Map<Map<String,String>, AtomicBoolean> gettasks(){
+        return manageAsyncTasksService.getMapLogMonitoringThread();
     }
 
     @DeleteMapping("anomlies/tasks")

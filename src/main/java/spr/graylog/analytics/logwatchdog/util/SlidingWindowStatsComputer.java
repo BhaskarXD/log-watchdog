@@ -1,46 +1,55 @@
 package spr.graylog.analytics.logwatchdog.util;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
-//@Component
-//@Scope("prototype")
 public class SlidingWindowStatsComputer {
-    private final Queue<Long> dataPoints; // Queue to store the previous data points
-    private long sum; // Sum of the data points
-    private double mean; // Mean of the data points
-    private double sumOfSquares; // Sum of squares of the ata points
-    private double standardDeviation; // Standard deviation of the data points
-    private final long windowSize ; // Size of the sliding window
+    private final Queue<Long> dataPoints;
+    private long sum;
+    private double mean;
+    private double sumOfSquares;
+    private double standardDeviation;
+    private long windowSize;
+    private static final int MINIMUM_WINDOW_SIZE = 6;
 
-    public SlidingWindowStatsComputer(long windowSize) {
-        this.dataPoints = new LinkedList<>();
-        this.sum = 0;
-        this.mean = 0.0;
-        this.sumOfSquares = 0.0;
-        this.standardDeviation = 0.0;
-        this.windowSize=windowSize;
+    public SlidingWindowStatsComputer(List<Long> initialValues) {
+        if (initialValues.size() < MINIMUM_WINDOW_SIZE) {
+            throw new IllegalArgumentException("The number of data points must be greater than: " + MINIMUM_WINDOW_SIZE);
+        }
+
+        this.dataPoints = new LinkedList<>(initialValues);
+        this.windowSize = initialValues.size();
+        this.sum = initialValues.stream().mapToLong(Long::longValue).sum();
+        this.mean = (double) sum / windowSize;
+        this.sumOfSquares = initialValues.stream().mapToDouble(val -> val * val).sum();
+        this.standardDeviation = computeStandardDeviation();
     }
 
     public void addDataPoint(long dataPoint) {
-        // Add the new data point to the rear of the queue
         dataPoints.offer(dataPoint);
-
-        // If the queue size exceeds the window size, remove the oldest data point
+        System.out.println("added data point : "+dataPoint);
         if (dataPoints.size() > windowSize) {
             long oldestDataPoint = dataPoints.poll();
+            System.out.println("remmoved : "+oldestDataPoint);
             sum -= oldestDataPoint;
             sumOfSquares -= oldestDataPoint * oldestDataPoint;
         }
 
-        // Update the sum and sum of squares
         sum += dataPoint;
         sumOfSquares += dataPoint * dataPoint;
 
-        // Update the mean and standard deviation
         int numDataPoints = dataPoints.size();
         mean = (double) sum / numDataPoints;
-        standardDeviation = Math.sqrt((sumOfSquares - numDataPoints * mean * mean) / (numDataPoints - 1));
+        standardDeviation = computeStandardDeviation();
+    }
+
+    private double computeStandardDeviation() {
+        int numDataPoints = dataPoints.size();
+        if (numDataPoints <= 1) {
+            return 0.0;
+        }
+        return Math.sqrt((sumOfSquares - numDataPoints * mean * mean) / (numDataPoints - 1));
     }
 
     public double getMean() {
@@ -49,6 +58,13 @@ public class SlidingWindowStatsComputer {
 
     public double getStandardDeviation() {
         return standardDeviation;
+    }
+
+    public double calculateZScore(long dataPoint) {
+        if (standardDeviation == 0.0) {
+            return (dataPoint > mean) ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
+        }
+        return (dataPoint - mean) / standardDeviation;
     }
 }
 
