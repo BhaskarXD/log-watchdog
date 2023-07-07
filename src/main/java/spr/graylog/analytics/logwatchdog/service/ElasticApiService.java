@@ -4,21 +4,20 @@ import co.elastic.clients.elasticsearch._types.aggregations.DateHistogramBucket;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import spr.graylog.analytics.logwatchdog.repository.ElasticClusterRepository;
+import spr.graylog.analytics.logwatchdog.repository.ElasticClientApiRepository;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Service
 public class ElasticApiService {
-    private final ElasticClusterRepository elasticClusterRepository;
+    private final ElasticClientApiRepository elasticClientApiRepository;
     @Autowired
-    public ElasticApiService(ElasticClusterRepository elasticClusterRepository) {
-        this.elasticClusterRepository = elasticClusterRepository;
+    public ElasticApiService(ElasticClientApiRepository elasticClientApiRepository) {
+        this.elasticClientApiRepository = elasticClientApiRepository;
     }
 
     public List<String> detectAnomaliesAroundTimestamp(String source, LocalDateTime timestamp) throws IOException {
@@ -32,7 +31,7 @@ public class ElasticApiService {
         LocalDateTime anomalyDetectionStartTimestamp = timestamp.minusHours(1);
 
 
-        SearchResponse<Void> response = elasticClusterRepository.getTimeHistogramPipelineExtendedStats(source,startTimestamp,endTimestamp);
+        SearchResponse<Void> response = elasticClientApiRepository.getTimeHistogramPipelineExtendedStats(source,startTimestamp,endTimestamp);
 
         double avg = response.aggregations().get("doc_count_stats").extendedStatsBucket().avg();
         double stdDeviation = response.aggregations().get("doc_count_stats").extendedStatsBucket().stdDeviation();
@@ -57,13 +56,4 @@ public class ElasticApiService {
 
         return anomalies;
     }
-
-    public String detectAnomaliesByQuery(String query){
-        return "";
-    }
-
-    private LocalDateTime convertEsTimeToLocalDateTime(DateHistogramBucket dateHistogramBucket){
-        return LocalDateTime.parse(Objects.requireNonNull(dateHistogramBucket.keyAsString()), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-    }
-
 }

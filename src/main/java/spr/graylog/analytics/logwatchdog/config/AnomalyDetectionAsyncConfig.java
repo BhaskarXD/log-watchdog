@@ -8,12 +8,11 @@ import spr.graylog.analytics.logwatchdog.util.CustomRejectionPolicy;
 
 import java.util.concurrent.Executor;
 
-
 @Configuration
 @EnableAsync
 public class AnomalyDetectionAsyncConfig {
-    private static final int CORE_POOL_SIZE = 1;
-    private static final int MAX_POOL_SIZE = 1;
+    private static final int CORE_POOL_SIZE = 5;
+    private static final int MAX_POOL_SIZE = 10;
     private static final int QUEUE_CAPACITY = 0;
 
     @Bean(name="AnomalyDetectionMultiThreadingBean")
@@ -27,5 +26,4 @@ public class AnomalyDetectionAsyncConfig {
         executor.initialize();
         return executor;
     }
-
 }
