@@ -11,7 +11,6 @@ import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInter
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
-import spr.graylog.analytics.logwatchdog.util.BoolQueryBuilderUtil;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -25,19 +24,19 @@ public class ElasticHLRCRepository {
     private static final String DATE_HISTOGRAM_NAME="log_date_histogram";
     private static final int SEARCH_QUERY_RESULT_SIZE=0;
     private final RestHighLevelClient restHighLevelClient;
-    private final BoolQueryBuilderUtil boolQueryBuilderUtil;
+
+    public ElasticHLRCRepository(RestHighLevelClient restHighLevelClient) {
+        this.restHighLevelClient = restHighLevelClient;
+    }
 
     public String getDateHistogramName() {
         return DATE_HISTOGRAM_NAME;
     }
 
-    public ElasticHLRCRepository(RestHighLevelClient restHighLevelClient,BoolQueryBuilderUtil boolQueryBuilderUtil) {
-        this.restHighLevelClient = restHighLevelClient;
-        this.boolQueryBuilderUtil=boolQueryBuilderUtil;
-    }
-
-    public SearchResponse getDateHistogramBetweenTimestamps(BoolQueryBuilder originalBoolQuery, LocalDateTime startTimestamp, LocalDateTime endTimestamp) throws IOException {
-        BoolQueryBuilder boolQuery=boolQueryBuilderUtil.deepCopyBoolQuery(originalBoolQuery);
+    public SearchResponse getDateHistogramBetweenTimestamps(BoolQueryBuilder originalBoolQuery,
+                                                            LocalDateTime startTimestamp,
+                                                            LocalDateTime endTimestamp) throws IOException {
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery().filter(originalBoolQuery);
         boolQuery.filter(QueryBuilders.rangeQuery(elasticsearchTimestampField)
                 .gte(startTimestamp)
                 .lt(endTimestamp));
@@ -48,15 +47,18 @@ public class ElasticHLRCRepository {
         sourceBuilder.aggregation(AggregationBuilders
                 .dateHistogram(DATE_HISTOGRAM_NAME)
                 .field(elasticsearchTimestampField)
-                .fixedInterval(DateHistogramInterval.minutes(5)));
+                .fixedInterval(DateHistogramInterval.minutes(5))
+                .minDocCount(0));
 
         SearchRequest searchRequest = new SearchRequest(elasticsearchIndex);
         searchRequest.source(sourceBuilder);
 
         return restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
     }
-    public SearchResponse getRecordsGeneratedBetweenTimestamps(BoolQueryBuilder originalBoolQuery,LocalDateTime startTimestamp, LocalDateTime endTimestamp) throws IOException {
-        BoolQueryBuilder boolQuery= boolQueryBuilderUtil.deepCopyBoolQuery(originalBoolQuery);
+    public SearchResponse getRecordsGeneratedBetweenTimestamps(BoolQueryBuilder originalBoolQuery,
+                                                               LocalDateTime startTimestamp,
+                                                               LocalDateTime endTimestamp) throws IOException {
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery().filter(originalBoolQuery);
         boolQuery.filter(QueryBuilders.rangeQuery(elasticsearchTimestampField)
                 .gte(startTimestamp)
                 .lt(endTimestamp));

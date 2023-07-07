@@ -43,6 +43,4 @@ public class ElasticClientApiRepository {
                 ,
                 Void.class);
     }
-
-//    public SearchResponse<Void> getLastTwoHourFrequencyExtendedStats
 }

@@ -9,10 +9,10 @@ import java.util.Map;
 @Service
 public class ElasticQueryBuilderService {
     public BoolQueryBuilder boolQueryBuilderForMapQuery(Map<String,String> filterQueryMap){
-        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+        BoolQueryBuilder boolFilter = QueryBuilders.boolQuery();
         for (Map.Entry<String, String> entry : filterQueryMap.entrySet()) {
-            boolQuery.filter(QueryBuilders.matchQuery(entry.getKey(), entry.getValue()));
+            boolFilter.must(QueryBuilders.matchQuery(entry.getKey(), entry.getValue()));
         }
-        return boolQuery;
+        return boolFilter;
     }
 }

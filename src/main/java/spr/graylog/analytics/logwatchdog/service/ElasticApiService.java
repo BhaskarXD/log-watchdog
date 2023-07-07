@@ -8,7 +8,6 @@ import spr.graylog.analytics.logwatchdog.repository.ElasticClientApiRepository;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -57,13 +56,4 @@ public class ElasticApiService {
 
         return anomalies;
     }
-
-//    public String detectAnomaliesByQuery(String query){
-//        return "";
-//    }
-//
-//    private LocalDateTime convertEsTimeToLocalDateTime(DateHistogramBucket dateHistogramBucket){
-//        return LocalDateTime.parse(Objects.requireNonNull(dateHistogramBucket.keyAsString()), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-//    }
-
 }
