@@ -3,7 +3,9 @@ package spr.graylog.analytics.logwatchdog.client;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.Collections;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +40,8 @@ public class PythonModelClient {
             String response = responseEntity.getBody();
             ObjectMapper objectMapper = new ObjectMapper();
             try {
-                return objectMapper.readValue(response, new TypeReference<List<PredictionData>>() {});
+                return objectMapper.readValue(response, new TypeReference<List<PredictionData>>() {
+                });
             } catch (JsonProcessingException e) {
                 logger.error("Error: Failed to parse JSON response", e);
             }

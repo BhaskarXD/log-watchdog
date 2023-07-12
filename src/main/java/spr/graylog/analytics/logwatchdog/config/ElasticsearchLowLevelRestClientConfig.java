@@ -26,7 +26,7 @@ public class ElasticsearchLowLevelRestClientConfig {
     private String fingerprint;
 
     @Bean
-    public RestClient getElasticSearchLowLevelRestClient(){
+    public RestClient getElasticSearchLowLevelRestClient() {
         SSLContext sslContext = TransportUtils
                 .sslContextFromCaFingerprint(fingerprint);
 

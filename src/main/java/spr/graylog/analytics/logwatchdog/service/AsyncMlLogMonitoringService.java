@@ -53,7 +53,7 @@ public class AsyncMlLogMonitoringService {
 
         try {
             SearchResponse searchResponse = null;
-            searchResponse = elasticHLRCRepository.getDateHistogramBetweenTimestamps(boolQuery,histogramStartTimestamp,histogramEndTimestamp);
+            searchResponse = elasticHLRCRepository.getDateHistogramBetweenTimestamps(boolQuery, histogramStartTimestamp, histogramEndTimestamp);
 
             List<DateHistogramData> histogramData = parseDateHistogramResponse(searchResponse);
             if (histogramData.isEmpty()) {
@@ -75,13 +75,13 @@ public class AsyncMlLogMonitoringService {
                 currPredictionData = mlModelResponse.get(i);
                 currDateTimeAsString = currPredictionData.getDs();
                 currDateTime = getParsedDateTime(currDateTimeAsString);
-                aggregationEndTimestamp=currDateTime.plusMinutes(5);
-                TotalHits totalHits=elasticHLRCRepository.getRecordsGeneratedBetweenTimestamps(boolQuery,currDateTime,aggregationEndTimestamp).getHits().getTotalHits();
+                aggregationEndTimestamp = currDateTime.plusMinutes(5);
+                TotalHits totalHits = elasticHLRCRepository.getRecordsGeneratedBetweenTimestamps(boolQuery, currDateTime, aggregationEndTimestamp).getHits().getTotalHits();
 
-                if(totalHits==null){
-                    aggregationResult=0;
-                }else{
-                    aggregationResult=totalHits.value;
+                if (totalHits == null) {
+                    aggregationResult = 0;
+                } else {
+                    aggregationResult = totalHits.value;
                 }
 
                 double yhat = currPredictionData.getYhat();
@@ -90,7 +90,7 @@ public class AsyncMlLogMonitoringService {
 
                 double uncertainty = yhatUpper - yhatLower;
                 double error = (aggregationResult - yhat);
-                double anomalyScore = (error / uncertainty)*100;
+                double anomalyScore = (error / uncertainty) * 100;
 
                 if (error > uncertainty) {
                     LOGGER.warn("Anomalous data detected - Timestamp: {}, AggregationResult: {}, Yhat: {}, Uncertainty: {}, AnomalyScore: {}",
@@ -100,7 +100,7 @@ public class AsyncMlLogMonitoringService {
             }
         } catch (Exception ex) {
             LOGGER.error("Error occurred while monitoring Ml logs.", ex);
-        }finally {
+        } finally {
             if (cancelFlag.get()) {
                 LOGGER.info("Ml Log monitoring task canceled for query: {}", query);
             } else {
@@ -139,12 +139,12 @@ public class AsyncMlLogMonitoringService {
         return jsonRequest.toString();
     }
 
-    public LocalDateTime getParsedDateTime(String dateString){
+    public LocalDateTime getParsedDateTime(String dateString) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return LocalDateTime.parse(dateString, formatter);
     }
 
-    public Boolean checkQueryExists(Map<String,String> query){
+    public Boolean checkQueryExists(Map<String, String> query) {
         AtomicBoolean taskBoolean = runningTasks.get(query);
         return taskBoolean != null;
     }

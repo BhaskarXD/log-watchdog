@@ -28,10 +28,10 @@ public class SlidingWindowStatsComputer {
 
     public void addDataPoint(long dataPoint) {
         dataPoints.offer(dataPoint);
-        System.out.println("added data point : "+dataPoint);
+        System.out.println("added data point : " + dataPoint);
         if (dataPoints.size() > windowSize) {
             long oldestDataPoint = dataPoints.poll();
-            System.out.println("remmoved : "+oldestDataPoint);
+            System.out.println("remmoved : " + oldestDataPoint);
             sum -= oldestDataPoint;
             sumOfSquares -= oldestDataPoint * oldestDataPoint;
         }

@@ -15,6 +15,7 @@ import java.util.Objects;
 @Service
 public class ElasticApiService {
     private final ElasticClientApiRepository elasticClientApiRepository;
+
     @Autowired
     public ElasticApiService(ElasticClientApiRepository elasticClientApiRepository) {
         this.elasticClientApiRepository = elasticClientApiRepository;
@@ -31,24 +32,24 @@ public class ElasticApiService {
         LocalDateTime anomalyDetectionStartTimestamp = timestamp.minusHours(1);
 
 
-        SearchResponse<Void> response = elasticClientApiRepository.getTimeHistogramPipelineExtendedStats(source,startTimestamp,endTimestamp);
+        SearchResponse<Void> response = elasticClientApiRepository.getTimeHistogramPipelineExtendedStats(source, startTimestamp, endTimestamp);
 
         double avg = response.aggregations().get("doc_count_stats").extendedStatsBucket().avg();
         double stdDeviation = response.aggregations().get("doc_count_stats").extendedStatsBucket().stdDeviation();
-        double anomalyUpperLimit=avg+3*stdDeviation;
-        double anomalyLowerLimit=avg-3*stdDeviation;
-        List<DateHistogramBucket> dateHistogramBuckets=response.aggregations().get("logs_per_minute").dateHistogram().buckets().array();
+        double anomalyUpperLimit = avg + 3 * stdDeviation;
+        double anomalyLowerLimit = avg - 3 * stdDeviation;
+        List<DateHistogramBucket> dateHistogramBuckets = response.aggregations().get("logs_per_minute").dateHistogram().buckets().array();
         long logCount;
-        int consecutiveAnomalyCounter=0;
-        for(int i = dateHistogramBuckets.size()-1; i>=0 && Objects.requireNonNull(dateHistogramBuckets.get(i).keyAsString()).compareTo(anomalyDetectionStartTimestamp.toString())>0; i--){
-            DateHistogramBucket currentHistogramBucket=dateHistogramBuckets.get(i);
-            logCount= currentHistogramBucket.docCount();
-            if(logCount>anomalyUpperLimit || logCount<anomalyLowerLimit){
+        int consecutiveAnomalyCounter = 0;
+        for (int i = dateHistogramBuckets.size() - 1; i >= 0 && Objects.requireNonNull(dateHistogramBuckets.get(i).keyAsString()).compareTo(anomalyDetectionStartTimestamp.toString()) > 0; i--) {
+            DateHistogramBucket currentHistogramBucket = dateHistogramBuckets.get(i);
+            logCount = currentHistogramBucket.docCount();
+            if (logCount > anomalyUpperLimit || logCount < anomalyLowerLimit) {
                 consecutiveAnomalyCounter++;
-            }else if (consecutiveAnomalyCounter>0){
-                consecutiveAnomalyCounter=0;
+            } else if (consecutiveAnomalyCounter > 0) {
+                consecutiveAnomalyCounter = 0;
             }
-            if(consecutiveAnomalyCounter>4) {
+            if (consecutiveAnomalyCounter > 4) {
                 anomalies.add(currentHistogramBucket.toString());
                 consecutiveAnomalyCounter = 0;
             }

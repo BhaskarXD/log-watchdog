@@ -21,8 +21,8 @@ public class ElasticHLRCRepository {
     private String elasticsearchIndex;
     @Value("${elasticsearch.timestamp.field}")
     private String elasticsearchTimestampField;
-    private static final String DATE_HISTOGRAM_NAME="log_date_histogram";
-    private static final int SEARCH_QUERY_RESULT_SIZE=0;
+    private static final String DATE_HISTOGRAM_NAME = "log_date_histogram";
+    private static final int SEARCH_QUERY_RESULT_SIZE = 0;
     private final RestHighLevelClient restHighLevelClient;
 
     public ElasticHLRCRepository(RestHighLevelClient restHighLevelClient) {
@@ -53,8 +53,9 @@ public class ElasticHLRCRepository {
         SearchRequest searchRequest = new SearchRequest(elasticsearchIndex);
         searchRequest.source(sourceBuilder);
 
-        return restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
+        return restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
     }
+
     public SearchResponse getRecordsGeneratedBetweenTimestamps(BoolQueryBuilder originalBoolQuery,
                                                                LocalDateTime startTimestamp,
                                                                LocalDateTime endTimestamp) throws IOException {

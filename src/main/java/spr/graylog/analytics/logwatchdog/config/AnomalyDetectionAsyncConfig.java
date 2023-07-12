@@ -15,7 +15,7 @@ public class AnomalyDetectionAsyncConfig {
     private static final int MAX_POOL_SIZE = 10;
     private static final int QUEUE_CAPACITY = 0;
 
-    @Bean(name="AnomalyDetectionMultiThreadingBean")
+    @Bean(name = "AnomalyDetectionMultiThreadingBean")
     public Executor getThreadPoolExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(CORE_POOL_SIZE);

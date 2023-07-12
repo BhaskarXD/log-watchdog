@@ -12,13 +12,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ElasticsearchClientConfig {
     private final RestClient restClient;
+
     @Autowired
     public ElasticsearchClientConfig(RestClient restClient) {
         this.restClient = restClient;
     }
 
     @Bean
-    public ElasticsearchClient getElasticsearchClient(){
+    public ElasticsearchClient getElasticsearchClient() {
         // Create the transport and the API client
         ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
         return new ElasticsearchClient(transport);

@@ -23,23 +23,23 @@ public class ElasticClientApiRepository {
 
 
     public SearchResponse<Void> getTimeHistogramPipelineExtendedStats(String source, LocalDateTime startTimestamp, LocalDateTime endTimestamp) throws IOException {
-        Query query = MatchQuery.of(q->q.field("source").query(source))._toQuery();
+        Query query = MatchQuery.of(q -> q.field("source").query(source))._toQuery();
         return elasticsearchClient.search(b0 -> b0
                         .index(esIndex)
                         .query(query)
                         .aggregations("logs_per_minute", a -> a
-                                .dateHistogram(d->d
+                                .dateHistogram(d -> d
                                         .field("csv_timestamp")
-                                        .fixedInterval(t->t
-                                                .time("1m")).minDocCount(0).extendedBounds(r->r
-                                                .min(FieldDateMath.of(l->l
+                                        .fixedInterval(t -> t
+                                                .time("1m")).minDocCount(0).extendedBounds(r -> r
+                                                .min(FieldDateMath.of(l -> l
                                                         .expr(startTimestamp.toString()))).
-                                                max(FieldDateMath.of(l->l
+                                                max(FieldDateMath.of(l -> l
                                                         .expr(endTimestamp.toString()))
                                                 )
                                         )
                                 )
-                        ).aggregations("doc_count_stats",b1->b1.extendedStatsBucket(b2->b2.bucketsPath(b3->b3.single("logs_per_minute>_count"))))
+                        ).aggregations("doc_count_stats", b1 -> b1.extendedStatsBucket(b2 -> b2.bucketsPath(b3 -> b3.single("logs_per_minute>_count"))))
                 ,
                 Void.class);
     }

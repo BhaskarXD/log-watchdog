@@ -10,12 +10,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ElasticsearchRestHighLevelClientConfig {
     private final RestClient restClient;
+
     @Autowired
     public ElasticsearchRestHighLevelClientConfig(RestClient restClient) {
         this.restClient = restClient;
     }
+
     @Bean
-    public RestHighLevelClient getElasticsearchHLRC(){
+    public RestHighLevelClient getElasticsearchHLRC() {
         // Create the HLRC
         return new RestHighLevelClientBuilder(restClient)
                 .setApiCompatibilityMode(true)
