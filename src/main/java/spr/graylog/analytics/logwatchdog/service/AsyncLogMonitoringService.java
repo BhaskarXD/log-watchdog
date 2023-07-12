@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import spr.graylog.analytics.logwatchdog.repository.ElasticHLRCRepository;
+import spr.graylog.analytics.logwatchdog.util.ElasticQueryBuilderUtil;
 import spr.graylog.analytics.logwatchdog.util.SlidingWindowStatsComputer;
 import spr.graylog.analytics.logwatchdog.util.StartDateTimestamp;
 
@@ -26,37 +27,36 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AsyncLogMonitoringService {
     private final ConcurrentHashMap<Map<String, String>, AtomicBoolean> runningTasks;
     private final ElasticHLRCRepository elasticHLRCRepository;
-    private final ElasticQueryBuilderService elasticQueryBuilderService;
     private static final Logger LOGGER = LoggerFactory.getLogger(AsyncLogMonitoringService.class);
 
-    public AsyncLogMonitoringService(ElasticHLRCRepository elasticHLRCRepository, ElasticQueryBuilderService elasticQueryBuilderService) {
+    public AsyncLogMonitoringService(ElasticHLRCRepository elasticHLRCRepository) {
         this.elasticHLRCRepository = elasticHLRCRepository;
-        this.elasticQueryBuilderService = elasticQueryBuilderService;
         this.runningTasks = new ConcurrentHashMap<>();
     }
 
     @Async("AnomalyDetectionMultiThreadingBean")
-    public void monitorLogByQuery(Map<String,String> query){
+    public void monitorLogByQuery(Map<String, String> query) {
         AtomicBoolean cancelFlag = new AtomicBoolean(false);
         runningTasks.put(query, cancelFlag);
 
-        BoolQueryBuilder boolQuery=elasticQueryBuilderService.boolQueryBuilderForMapQuery(query);
-        LocalDateTime startTimestamp= StartDateTimestamp.getStartTimestamp();
+        BoolQueryBuilder boolQuery = ElasticQueryBuilderUtil.boolQueryBuilderForMapQuery(query);
+        LocalDateTime startTimestamp = StartDateTimestamp.getStartTimestamp();
 
         try {
-            List<Long> docCountList=getDateHistogramDocCount(boolQuery,startTimestamp);
-            System.out.println(docCountList);
-            SlidingWindowStatsComputer slidingWindowStatsComputer= new SlidingWindowStatsComputer(docCountList);
+            List<Long> docCountList = getDateHistogramDocCount(boolQuery, startTimestamp);
+            SlidingWindowStatsComputer slidingWindowStatsComputer = new SlidingWindowStatsComputer(docCountList);
             long curLogsGenerated;
-            for(int i=0; i<120 && !cancelFlag.get(); i++){
-                LocalDateTime currTimestamp=startTimestamp.plusMinutes(5);
-                TotalHits totalHits=elasticHLRCRepository.getRecordsGeneratedBetweenTimestamps(boolQuery,startTimestamp,currTimestamp).getHits().getTotalHits();
-                if(totalHits==null){
-                    curLogsGenerated=(long)slidingWindowStatsComputer.getMean();
-                }else{
-                    curLogsGenerated=totalHits.value;
+            LocalDateTime currTimestamp;
+            TotalHits totalHits;
+            for (int i = 0; i < 120 && !cancelFlag.get(); i++) {
+                currTimestamp = startTimestamp.plusMinutes(5);
+                totalHits = elasticHLRCRepository.getRecordsGeneratedBetweenTimestamps(boolQuery, startTimestamp, currTimestamp).getHits().getTotalHits();
+                if (totalHits == null) {
+                    curLogsGenerated = (long) slidingWindowStatsComputer.getMean();
+                } else {
+                    curLogsGenerated = totalHits.value;
                 }
-                double zScore=slidingWindowStatsComputer.calculateZScore(curLogsGenerated);
+                double zScore = slidingWindowStatsComputer.calculateZScore(curLogsGenerated);
                 if (zScore > 3) {
                     LOGGER.warn("Anomalous data detected - Timestamp: {}, LogsGenerated: {}, Z-Score: {}", startTimestamp, curLogsGenerated, zScore);
                 }
@@ -66,24 +66,24 @@ public class AsyncLogMonitoringService {
             }
         } catch (Exception ex) {
             LOGGER.error("Error occurred while monitoring logs.", ex);
-        }finally {
+        } finally {
             if (cancelFlag.get()) {
                 LOGGER.info("Log monitoring task canceled for query: {}", query);
             } else {
-                LOGGER.info("Log monitoring task completed successfully for query: {}", query);
+                LOGGER.info("Log monitoring task exited for query: {}", query);
             }
             runningTasks.remove(query);
         }
     }
 
     public List<Long> getDateHistogramDocCount(BoolQueryBuilder boolQuery, LocalDateTime histogramEndTimestamp) throws IOException {
-        LocalDateTime histogramStartTimestamp=histogramEndTimestamp.minusHours(3);
-        SearchResponse histogramSearchResponse=elasticHLRCRepository
+        LocalDateTime histogramStartTimestamp = histogramEndTimestamp.minusHours(3);
+        SearchResponse histogramSearchResponse = elasticHLRCRepository
                 .getDateHistogramBetweenTimestamps(
                         boolQuery,
                         histogramStartTimestamp,
                         histogramEndTimestamp);
-        ParsedDateHistogram parsedDateHistogram=histogramSearchResponse
+        ParsedDateHistogram parsedDateHistogram = histogramSearchResponse
                 .getAggregations()
                 .get(elasticHLRCRepository.getDateHistogramName());
 
@@ -94,7 +94,7 @@ public class AsyncLogMonitoringService {
         return docCounts;
     }
 
-    public Boolean checkQueryExists(Map<String,String> query){
+    public Boolean checkQueryExists(Map<String, String> query) {
         AtomicBoolean taskBoolean = runningTasks.get(query);
         return taskBoolean != null;
     }

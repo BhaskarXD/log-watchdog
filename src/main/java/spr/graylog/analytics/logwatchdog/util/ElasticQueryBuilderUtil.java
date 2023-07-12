@@ -1,14 +1,12 @@
-package spr.graylog.analytics.logwatchdog.service;
+package spr.graylog.analytics.logwatchdog.util;
 
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-@Service
-public class ElasticQueryBuilderService {
-    public BoolQueryBuilder boolQueryBuilderForMapQuery(Map<String,String> filterQueryMap){
+public interface ElasticQueryBuilderUtil {
+    public static BoolQueryBuilder boolQueryBuilderForMapQuery(Map<String,String> filterQueryMap){
         BoolQueryBuilder boolFilter = QueryBuilders.boolQuery();
         for (Map.Entry<String, String> entry : filterQueryMap.entrySet()) {
             boolFilter.must(QueryBuilders.matchQuery(entry.getKey(), entry.getValue()));

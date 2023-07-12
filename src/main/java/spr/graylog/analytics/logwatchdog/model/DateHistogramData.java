@@ -1,20 +1,19 @@
 package spr.graylog.analytics.logwatchdog.model;
-import java.time.LocalDateTime;
 
 public class DateHistogramData {
-    private LocalDateTime date;
+    private String date;
     private long docCount;
 
-    public DateHistogramData(LocalDateTime date, long docCount) {
+    public DateHistogramData(String date, long docCount) {
         this.date = date;
         this.docCount = docCount;
     }
 
-    public LocalDateTime getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(LocalDateTime date) {
+    public void setDate(String date) {
         this.date = date;
     }
 

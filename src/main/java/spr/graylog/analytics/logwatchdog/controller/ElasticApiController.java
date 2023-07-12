@@ -2,13 +2,11 @@ package spr.graylog.analytics.logwatchdog.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import spr.graylog.analytics.logwatchdog.service.ElasticApiService;
+import spr.graylog.analytics.logwatchdog.service.ManageAsyncMlTasksService;
 import spr.graylog.analytics.logwatchdog.service.ManageAsyncTasksService;
-import spr.graylog.analytics.logwatchdog.service.MlLogMonitoringService;
-import spr.graylog.analytics.logwatchdog.service.TempTest;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -17,26 +15,24 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RestController
-@RequestMapping("/watchdog")
+@RequestMapping("/watchdog/anomalies")
 public class ElasticApiController {
     private final ElasticApiService elasticApiService;
     private final ManageAsyncTasksService manageAsyncTasksService;
-    private final MlLogMonitoringService mlLogMonitoringService;
-    private final TempTest tempTest;
-
-    public ElasticApiController(ElasticApiService elasticApiService, ManageAsyncTasksService manageAsyncTasksService, MlLogMonitoringService mlLogMonitoringService, TempTest tempTest) {
-        this.elasticApiService = elasticApiService;
-        this.manageAsyncTasksService = manageAsyncTasksService;
-        this.mlLogMonitoringService = mlLogMonitoringService;
-        this.tempTest = tempTest;
-    }
+    private final ManageAsyncMlTasksService manageAsyncMlTasksService;
 
     @Autowired
-
+    public ElasticApiController(ElasticApiService elasticApiService,
+                                ManageAsyncTasksService manageAsyncTasksService,
+                                ManageAsyncMlTasksService manageAsyncMlTasksService) {
+        this.elasticApiService = elasticApiService;
+        this.manageAsyncTasksService = manageAsyncTasksService;
+        this.manageAsyncMlTasksService = manageAsyncMlTasksService;
+    }
 
     //-------------------------- methods that interact with the api ----------------------------------------------------
 
-    @GetMapping("/anomalies/moments")
+    @GetMapping("/moments")
     public ResponseEntity<List<String>> detectAnomaliesByTimestamp(
             @RequestParam("source") String source,
             @RequestParam("timestamp") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime timestamp) throws IOException {
@@ -45,37 +41,37 @@ public class ElasticApiController {
         return ResponseEntity.ok(anomalies);
     }
 
-    @GetMapping("/anomalies/test")
-    public void detectAnomaliesByTimestamp() {
-        tempTest.doSomething();
-    }
-
-    @PostMapping("/anomalies/async")
-    public String addtask(@RequestBody Map<String, String> query) {
+    @PostMapping("/async")
+    public String addTask(@RequestBody Map<String, String> query) {
         return manageAsyncTasksService.createAsyncLogMonitorByQuery(query);
     }
-    @GetMapping("/anomalies/futures")
-    public Map<Map<String,String>, AtomicBoolean> gettasks(){
+
+    @GetMapping("/futures")
+    public Map<Map<String, String>, AtomicBoolean> getTasks() {
         return manageAsyncTasksService.getMapLogMonitoringThread();
     }
 
-    @DeleteMapping("anomalies/tasks")
-    public String deletetask(@RequestBody Map<String, String> query){
+    @DeleteMapping("/tasks")
+    public String deleteTask(@RequestBody Map<String, String> query) {
         return manageAsyncTasksService.cancelLogMonitoringTask(query);
     }
 
     //----------- method to interact with python ml model ---------------------
 
-    @PostMapping("/anomalies/ml")
-    public ResponseEntity<String> monitorLogs(@RequestBody Map<String, String> filterParams) {
-        try {
-            String response = mlLogMonitoringService.processLogMonitoring(filterParams);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred: " + e.getMessage());
-        }
+    @PostMapping("/ml")
+    public String monitorLogs(@RequestBody Map<String, String> query) {
+        return manageAsyncMlTasksService.createAsyncMlLogMonitorByQuery(query);
     }
 
+    @GetMapping("/mlFutures")
+    public Map<Map<String, String>, AtomicBoolean> getMlTasks() {
+        return manageAsyncMlTasksService.getMapMlLogMonitoringThread();
+    }
+
+    @DeleteMapping("/mlTasks")
+    public String deleteMlTask(@RequestBody Map<String, String> query) {
+        return manageAsyncMlTasksService.cancelMlLogMonitoringTask(query);
+    }
 }
 
 
